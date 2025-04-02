@@ -67,3 +67,61 @@ class MonteCarloIntegrator:
         estimate = (b - a) * np.mean(values)
         error = (b - a) * np.std(values) / np.sqrt(half_n)
         return estimate, error
+    
+    def plot_convergence(self, method='simple', steps=100, samples_per_step=100, **kwargs):
+        """
+        Plot the convergence of the integral estimate as the number of samples increases.
+
+        Parameters:
+            method (str): The method used for integration ('simple', 'importance', 'antithetic').
+            steps (int): Number of convergence steps.
+            samples_per_step (int): Number of samples added per step.
+            **kwargs: For "importance", provide proposal_pdf and proposal_sampler.
+        """
+        estimates = []
+        total_samples = steps * samples_per_step
+        a, b = self.domain
+
+        if method == 'simple':
+            for step in range(1, steps + 1):
+                n = step * samples_per_step
+                samples = np.random.uniform(a, b, n)
+                values = self.func(samples)
+                est = (b - a) * np.mean(values)
+                estimates.append(est)
+        elif method == 'antithetic':
+            for step in range(1, steps + 1):
+                n = step * samples_per_step
+                half_n = n // 2
+                u = np.random.uniform(0, 1, half_n)
+                x1 = a + (b - a) * u
+                x2 = a + (b - a) * (1 - u)
+                values1 = self.func(x1)
+                values2 = self.func(x2)
+                values = (values1 + values2) / 2.0
+                est = (b - a) * np.mean(values)
+                estimates.append(est)
+        elif method == 'importance':
+            proposal_pdf = kwargs.get('proposal_pdf', None)
+            proposal_sampler = kwargs.get('proposal_sampler', None)
+            if proposal_pdf is None or proposal_sampler is None:
+                raise ValueError("For importance sampling, provide 'proposal_pdf' and 'proposal_sampler'.")
+            for step in range(1, steps + 1):
+                n = step * samples_per_step
+                samples = proposal_sampler(n)
+                weights = self.func(samples) / proposal_pdf(samples)
+                est = np.mean(weights)
+                estimates.append(est)
+        else:
+            raise ValueError("Invalid method. Choose from 'simple', 'importance', or 'antithetic'.")
+        
+        # Plot the Convergence
+        plt.figure(figsize=(8, 4))
+        x_axis = np.arrange(samples_per_step, total_samples + 1, samples_per_step)
+        plt.plot(x_axis, estimates, marker='o')
+        plt.xlabel('Number of Samples')
+        plt.ylabel('Integral Estimate')
+        plt.title(f'Convergence of Monte Carlo Integration using {method.capitalize()} Method')
+        plt.grid(True)
+        plt.show
+        return estimates
