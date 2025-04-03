@@ -118,7 +118,7 @@ class MonteCarloIntegrator:
         
         # Plot the Convergence
         plt.figure(figsize=(8, 4))
-        x_axis = np.arrange(samples_per_step, total_samples + 1, samples_per_step)
+        x_axis = np.arange(samples_per_step, total_samples + 1, samples_per_step)
         plt.plot(x_axis, estimates, marker='o')
         plt.xlabel('Number of Samples')
         plt.ylabel('Integral Estimate')
