@@ -1,3 +1,5 @@
+import datetime
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -69,7 +71,7 @@ class MonteCarloIntegrator:
         error = (b - a) * np.std(values) / np.sqrt(half_n)
         return estimate, error
     
-    def plot_convergence(self, method='simple', steps=100, samples_per_step=100, **kwargs):
+    def plot_convergence(self, method='simple', steps=100, samples_per_step=100, save_folder ='plots', **kwargs):
         """
         Plot the convergence of the integral estimate as the number of samples increases.
 
@@ -124,5 +126,16 @@ class MonteCarloIntegrator:
         plt.ylabel('Integral Estimate')
         plt.title(f'Convergence of Monte Carlo Integration using {method.capitalize()} Method')
         plt.grid(True)
-        plt.show
+        # Save the plot if a save_folder is specified
+        if save_folder:
+            # Create the folder if it doesn't exist
+            if not os.path.exists(save_folder):
+                os.makedirs(save_folder)
+            # Create a unique filename using a timestamp
+            timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = os.path.join(save_folder, f"convergence_{method}_{timestamp}.png")
+            plt.savefig(filename)
+            print(f"Plot saved as {filename}")
+        else:
+            plt.show()
         return estimates
