@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+
 class MonteCarloIntegrator:
     def __init__(self, func, domain, num_samples=10000, seed=None):
         """
