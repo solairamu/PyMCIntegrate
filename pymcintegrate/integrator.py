@@ -250,7 +250,7 @@ class MonteCarloIntegrator:
                 os.makedirs(save_folder)
             # Create a unique filename using a timestamp
             timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = os.path.join(save_folder, f"animated convergence_{method}_{timestamp}.png")
+            filename = os.path.join(save_folder, f"animated_convergence_{method}_{timestamp}.png")
             plt.savefig(filename)
             print(f"Plot saved as {filename}")
         else:
