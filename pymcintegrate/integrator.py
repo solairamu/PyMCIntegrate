@@ -191,3 +191,69 @@ class MonteCarloIntegrator:
         else:
             plt.show()
         return estimates
+    
+    def animate_convergence_loop(self, method="simple", steps=50, samples_per_step=100, interval=0.1, save_folder ='plots'):
+        """
+        Animate the convergence of the integral estimate in real time.
+        
+        Parameters:
+            method (str): Integration method ("simple", "antithetic", or "importance").
+            steps (int): Number of animation steps.
+            samples_per_step (int): Number of samples added per step.
+            interval (float): Pause duration between frames (in seconds).
+        """
+        a, b = self.domain
+        estimates = []
+        plt.ion()  # Enable interactive mode
+        fig, ax = plt.subplots(figsize=(8, 4))
+        line, = ax.plot([], [], marker='o')
+        ax.set_xlim(samples_per_step, steps * samples_per_step)
+        # Adjust y-axis limits according to your function's range; modify as needed
+        ax.set_ylim(0, (b - a) * 1.2)
+        ax.set_xlabel('Number of Samples')
+        ax.set_ylabel('Integral Estimate')
+        ax.set_title(f'Convergence Animation: {method.capitalize()} Method')
+        ax.grid(True)
+        
+        for step in range(steps):
+            n = (step + 1) * samples_per_step
+            if method == "simple":
+                samples = np.random.uniform(a, b, n)
+                values = self.func(samples)
+                est = (b - a) * np.mean(values)
+            elif method == "antithetic":
+                half_n = n // 2
+                u = np.random.uniform(0, 1, half_n)
+                x1 = a + (b - a) * u
+                x2 = a + (b - a) * (1 - u)
+                values1 = self.func(x1)
+                values2 = self.func(x2)
+                est = (b - a) * np.mean((values1 + values2) / 2.0)
+            elif method == "importance":
+                # For importance sampling, you’d need to supply proposal_pdf and proposal_sampler
+                raise NotImplementedError("Loop-based importance sampling not implemented in this example.")
+            else:
+                raise ValueError("Unknown method. Choose 'simple', 'antithetic', or 'importance'.")
+            
+            estimates.append(est)
+            x_data = np.arange(samples_per_step, (step + 1) * samples_per_step + 1, samples_per_step)
+            line.set_data(x_data, estimates)
+            fig.canvas.draw()
+            fig.canvas.flush_events()
+            plt.pause(interval)
+        
+        plt.ioff()
+        # Save the plot if a save_folder is specified
+        if save_folder:
+            # Create the folder if it doesn't exist
+            if not os.path.exists(save_folder):
+                os.makedirs(save_folder)
+            # Create a unique filename using a timestamp
+            timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = os.path.join(save_folder, f"animated convergence_{method}_{timestamp}.png")
+            plt.savefig(filename)
+            print(f"Plot saved as {filename}")
+        else:
+            plt.show()
+        plt.show()
+
