@@ -2,6 +2,7 @@ import datetime
 import os
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.animation as animation
 
 class MonteCarloIntegrator:
     def __init__(self, func, domain, num_samples=10000, seed=None):
@@ -70,6 +71,57 @@ class MonteCarloIntegrator:
         estimate = (b - a) * np.mean(values)
         error = (b - a) * np.std(values) / np.sqrt(half_n)
         return estimate, error
+    
+    def adaptive_integrate(self, bins=10, initial_samples_per_bin=1000, total_samples=10000):
+        """
+        Perform adaptive Monte Carlo integration by stratifying the integration domain into bins,
+        and allocating extra samples based on the variance within each bin.
+
+        Parameters:
+            bins (int): Number of bins to divide the integration domain.
+            initial_samples_per_bin (int): Number of samples per bin in the initial phase.
+            total_samples (int): Total number of samples to be used.
+
+        Returns:
+            tuple: (estimate, error)
+        """
+        a, b = self.domain
+        bin_edges = np.linspace(a, b, bins + 1)
+        bin_samples = []
+
+        for i in range(bins):
+            samples =  np.random.uniform(bin_edges[i], bin_edges[i + 1], initial_samples_per_bin)
+            bin_samples.append(samples)
+
+        bin_vars = np.array([np.var(self.func(s)) for s in bin_samples])
+        total_initial = bins * initial_samples_per_bin
+        remaining_samples = total_samples - total_initial
+
+        if np.sum(bin_vars) > 0:
+            extra_allocation = np.round(remaining_samples * (bin_vars / np.sum(bin_vars))).astype(int)
+        else:
+            extra_allocation = np.full(bins, remaining_samples // bins)
+
+        for i in range(bins):
+            if extra_allocation[i] > 0:
+                extra_samples = np.random.uniform(bin_edges[i], bin_edges[i+1], extra_allocation[i])
+                bin_samples[i] = np.concatenate((bin_samples[i], extra_samples))
+
+        bin_estimates = []
+        bin_errors = []
+        for i in range(bins):
+            samples = bin_samples[i]
+            mean_val = np.mean(self.func(samples))
+            std_val = np.std(self.func(samples))
+            weight = bin_edges[i+1] - bin_edges[i]
+            estimate_bin = weight * mean_val
+            error_bin = weight * std_val / np.sqrt(len(samples))
+            bin_estimates.append(estimate_bin)
+            bin_errors.append(error_bin)
+
+        total_estimate = np.sum(bin_estimates)
+        total_error = np.sqrt(np.sum(np.array(bin_errors) ** 2))
+        return total_estimate, total_error
     
     def plot_convergence(self, method='simple', steps=100, samples_per_step=100, save_folder ='plots', **kwargs):
         """
