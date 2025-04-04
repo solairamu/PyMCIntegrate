@@ -31,6 +31,10 @@ def main():
     imp_estimate, imp_error = integrator.integrate_importance(proposal_pdf, proposal_sampler)
     print(f"Importance Sampling Estimate: {imp_estimate}, Error: {imp_error}")
 
+    # Adaptive Monte Carlo integration
+    estimate, error = integrator.adaptive_integrate(bins=10, initial_samples_per_bin=100, total_samples=10000)
+    print("Adaptive MC Estimate:", estimate, "with error:", error)
+
     # Plot convergence for simple Monte Carlo
     integrator.plot_convergence(method='simple', steps=50, samples_per_step=100)
 
