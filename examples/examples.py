@@ -38,5 +38,8 @@ def main():
     # Plot convergence for simple Monte Carlo
     integrator.plot_convergence(method='simple', steps=50, samples_per_step=100)
 
+    # Animate convergence using the simple method
+    integrator.animate_convergence_loop(method="simple", steps=50, samples_per_step=100, interval=0.1)
+
 if __name__ == "__main__":
     main()
